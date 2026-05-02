@@ -3,17 +3,27 @@ import { getTenantForCurrentUser } from '@/lib/tenant/resolver'
 import { redirect } from 'next/navigation'
 import { Users } from 'lucide-react'
 import AddStaffModal from '@/components/dashboard/AddStaffModal'
+import EditStaffModal from '@/components/dashboard/EditStaffModal'
 
 export default async function StaffPage() {
   const tenant = await getTenantForCurrentUser()
   if (!tenant) redirect('/login')
 
   const supabase = await createClient()
-  const { data: staff } = await supabase
-    .from('staff')
-    .select('*, schedules(*), staff_services(service_id)')
-    .eq('tenant_id', tenant.id)
-    .order('sort_order')
+
+  const [{ data: staff }, { data: services }] = await Promise.all([
+    supabase
+      .from('staff')
+      .select('*, schedules(*), staff_services(service_id)')
+      .eq('tenant_id', tenant.id)
+      .order('sort_order'),
+    supabase
+      .from('services')
+      .select('id, name')
+      .eq('tenant_id', tenant.id)
+      .eq('is_active', true)
+      .order('sort_order'),
+  ])
 
   return (
     <div className="px-6 py-8 max-w-4xl mx-auto">
@@ -35,7 +45,7 @@ export default async function StaffPage() {
           {staff!.map(member => (
             <div key={member.id} className="rounded-xl p-5" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold text-white shrink-0 bg-violet-600/20 text-violet-400">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-bold shrink-0 bg-violet-600/20 text-violet-400">
                   {member.name[0]}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -44,10 +54,25 @@ export default async function StaffPage() {
                   {member.specialty && (
                     <p className="text-xs text-[#64748b] mt-0.5">{member.specialty}</p>
                   )}
+                  {/* Servicios asignados */}
+                  {(member.staff_services as { service_id: string }[]).length > 0 && (
+                    <p className="text-xs text-violet-400 mt-1">
+                      {(member.staff_services as { service_id: string }[]).length} servicio
+                      {(member.staff_services as { service_id: string }[]).length !== 1 ? 's' : ''} asignado
+                      {(member.staff_services as { service_id: string }[]).length !== 1 ? 's' : ''}
+                    </p>
+                  )}
                 </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${member.is_active ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
-                  {member.is_active ? 'Activo' : 'Inactivo'}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${member.is_active ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                    {member.is_active ? 'Activo' : 'Inactivo'}
+                  </span>
+                  <EditStaffModal
+                    staff={member as Parameters<typeof EditStaffModal>[0]['staff']}
+                    tenantId={tenant.id}
+                    services={services ?? []}
+                  />
+                </div>
               </div>
 
               {/* Horario resumen */}
@@ -55,7 +80,7 @@ export default async function StaffPage() {
                 <div className="mt-4 pt-4 border-t" style={{ borderColor: 'var(--app-border)' }}>
                   <p className="text-xs text-[#64748b] mb-2">Días de trabajo</p>
                   <div className="flex gap-1">
-                    {['D','L','M','X','J','V','S'].map((d, i) => {
+                    {['D', 'L', 'M', 'X', 'J', 'V', 'S'].map((d, i) => {
                       const s = (member.schedules as { day_of_week: number; is_working: boolean }[]).find(s => s.day_of_week === i)
                       return (
                         <span key={i} className={`w-7 h-7 rounded-lg text-xs flex items-center justify-center font-medium ${

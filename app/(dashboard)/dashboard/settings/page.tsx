@@ -1,7 +1,7 @@
 import { getTenantForCurrentUser } from '@/lib/tenant/resolver'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Palette, Globe, Clock, ChevronRight } from 'lucide-react'
+import { Palette, Globe, Clock, ChevronRight, CalendarOff } from 'lucide-react'
 
 export default async function SettingsPage() {
   const tenant = await getTenantForCurrentUser()
@@ -25,6 +25,12 @@ export default async function SettingsPage() {
       icon: Clock,
       title: 'Políticas de citas',
       description: 'Anticipación mínima, máxima, anticipo requerido, cancelaciones',
+    },
+    {
+      href: '/dashboard/closures',
+      icon: CalendarOff,
+      title: 'Cierres del negocio',
+      description: 'Días feriados, vacaciones o cierres especiales de todo el equipo',
     },
   ]
 

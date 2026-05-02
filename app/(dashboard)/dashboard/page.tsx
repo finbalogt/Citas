@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { formatTime, formatCurrency, STATUS_LABELS, STATUS_COLORS } from '@/lib/utils'
 import { format, startOfDay, addDays, isSameDay } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Calendar, DollarSign, Users, AlertTriangle, Plus, ExternalLink } from 'lucide-react'
+import { Calendar, DollarSign, Users, AlertTriangle, Plus, ExternalLink, CalendarOff } from 'lucide-react'
 import Link from 'next/link'
 import type { Appointment } from '@/types/database'
 
@@ -16,6 +16,16 @@ export default async function DashboardPage() {
   const now        = new Date()
   const todayStart = startOfDay(now).toISOString()
   const weekEnd    = addDays(startOfDay(now), 7).toISOString()
+
+  // Cierres próximos del negocio (para acceso rápido)
+  const { data: upcomingClosures } = await supabase
+    .from('blocked_times')
+    .select('id, start_at, end_at, reason, staff_id')
+    .eq('tenant_id', tenant.id)
+    .is('staff_id', null)
+    .gte('end_at', now.toISOString())
+    .order('start_at')
+    .limit(3)
 
   const { data: upcomingAppts } = await supabase
     .from('appointments')
@@ -77,6 +87,50 @@ export default async function DashboardPage() {
             <p className="text-xs text-[#64748b] mt-0.5">{s.label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Acceso rápido — Cierres del negocio */}
+      <div className="rounded-xl mb-6" style={{ background: 'var(--app-surface)', border: '1px solid var(--app-border)' }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: 'var(--app-border)' }}>
+          <div className="flex items-center gap-2">
+            <CalendarOff className="w-4 h-4 text-violet-400" />
+            <h2 className="text-sm font-semibold text-white">Cierres del negocio</h2>
+          </div>
+          <Link href="/dashboard/closures" className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+            Gestionar →
+          </Link>
+        </div>
+        {(upcomingClosures?.length ?? 0) === 0 ? (
+          <div className="px-5 py-5 flex items-center justify-between">
+            <p className="text-sm text-[#64748b]">Sin cierres próximos registrados</p>
+            <Link
+              href="/dashboard/closures"
+              className="flex items-center gap-1.5 text-xs text-violet-400 hover:text-violet-300 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Agregar cierre
+            </Link>
+          </div>
+        ) : (
+          <div className="divide-y" style={{ borderColor: 'var(--app-border)' }}>
+            {upcomingClosures!.map(c => (
+              <div key={c.id} className="flex items-center justify-between px-5 py-3">
+                <div>
+                  <p className="text-sm text-white">
+                    {format(new Date(c.start_at), "d 'de' MMMM", { locale: es })}
+                    {c.start_at.slice(0, 10) !== c.end_at.slice(0, 10) && (
+                      <> — {format(new Date(c.end_at), "d 'de' MMMM", { locale: es })}</>
+                    )}
+                  </p>
+                  {c.reason && <p className="text-xs text-[#64748b] mt-0.5">{c.reason}</p>}
+                </div>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400">
+                  Cierre
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Próximas citas */}

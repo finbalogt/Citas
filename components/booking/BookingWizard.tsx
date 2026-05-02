@@ -83,10 +83,12 @@ export default function BookingWizard({ tenant, services, staff, preselectedServ
     }
   }
 
-  // Filtrar staff que atiende el servicio seleccionado
-  const availableStaff = booking.service
+  // Filtrar staff que atiende el servicio seleccionado.
+  // Si ningún profesional tiene el servicio asignado (staff_services vacío), se muestran todos.
+  const filteredByService = booking.service
     ? staff.filter(s => s.staff_services.some(ss => ss.service_id === booking.service!.id))
     : staff
+  const availableStaff = filteredByService.length > 0 ? filteredByService : staff
 
   return (
     <div className="min-h-dvh flex flex-col" style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>

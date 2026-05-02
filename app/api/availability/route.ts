@@ -51,6 +51,15 @@ export async function GET(req: Request) {
     staffIds = allStaff?.map(s => s.id) ?? []
   }
 
+  // Bloqueos de todo el negocio (staff_id IS NULL) — afectan a todos los profesionales
+  const { data: businessBlocks } = await supabase
+    .from('blocked_times')
+    .select('start_at, end_at')
+    .eq('tenant_id', tenantId)
+    .is('staff_id', null)
+    .lte('start_at', endOfDay(date).toISOString())
+    .gte('end_at', startOfDay(date).toISOString())
+
   const allSlotSets: Set<number>[] = []
 
   for (const sid of staffIds) {
@@ -73,18 +82,20 @@ export async function GET(req: Request) {
       .lte('starts_at', endOfDay(date).toISOString())
       .neq('status', 'cancelled')
 
-    // Tiempos bloqueados
-    const { data: blocked } = await supabase
+    // Bloqueos personales del profesional + bloqueos de negocio
+    const { data: staffBlocks } = await supabase
       .from('blocked_times')
       .select('start_at, end_at')
       .eq('staff_id', sid)
       .lte('start_at', endOfDay(date).toISOString())
       .gte('end_at', startOfDay(date).toISOString())
 
+    const combinedBlocks = [...(staffBlocks ?? []), ...(businessBlocks ?? [])]
+
     const slots = getAvailableSlots({
       schedule,
       appointments: appointments ?? [],
-      blockedTimes: blocked ?? [],
+      blockedTimes: combinedBlocks,
       serviceDuration:  service.duration_min,
       date,
       minAdvanceHours:  tenant.min_advance_hours,
