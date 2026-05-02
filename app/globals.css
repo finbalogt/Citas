@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── GOOGLE FONTS ───────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ─── APP GLOBALS (dashboard / platform) ────────────────────────────────── */
+:root {
+  --app-bg:       #080810;
+  --app-surface:  #10101c;
+  --app-surface2: #1a1a28;
+  --app-border:   rgba(255, 255, 255, 0.06);
+  --app-accent:   #7c3aed;
+  --app-accent2:  #8b5cf6;
+  --app-text:     #f1f5f9;
+  --app-muted:    #64748b;
+
+  /* Tenant vars (se sobreescriben por tenant en /b/[slug]) */
+  --color-primary:   #1a1a2e;
+  --color-secondary: #e94560;
+  --color-bg:        #ffffff;
+  --color-text:      #111111;
+  --border-radius:   8px;
+  --font-main:       'Inter', sans-serif;
+}
+
+/* ─── BASE ───────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--app-bg);
+  color: var(--app-text);
+}
+
+/* ─── SCROLLBAR ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* ─── SELECTION ──────────────────────────────────────────────────────────── */
+::selection { background: rgba(124, 58, 237, 0.4); color: #fff; }
+
+/* ─── FOCUS ──────────────────────────────────────────────────────────────── */
+:focus-visible { outline: 2px solid var(--app-accent); outline-offset: 2px; }
+
+/* ─── BOOKING PAGES — usa tenant vars ──────────────────────────────────── */
+.booking-page {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  min-height: 100dvh;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: #ffffff;
+  border-radius: var(--border-radius);
+  transition: opacity 0.15s;
+}
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-secondary {
+  background: var(--color-secondary);
+  color: #ffffff;
+  border-radius: var(--border-radius);
+  transition: opacity 0.15s;
+}
+.btn-secondary:hover { opacity: 0.88; }
+
+/* ─── GLASS CARD ─────────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ─── GRADIENT TEXT ──────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #a78bfa, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── STEP TRANSITION ────────────────────────────────────────────────────── */
+.step-enter {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── INPUT DARK ─────────────────────────────────────────────────────────── */
+.input-dark {
+  background: var(--app-surface2);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  border-radius: 8px;
+  padding: 10px 14px;
+  width: 100%;
+  font-size: 0.875rem;
+  transition: border-color 0.15s;
+}
+.input-dark:focus {
+  outline: none;
+  border-color: var(--app-accent);
+}
+.input-dark::placeholder {
+  color: var(--app-muted);
+}
